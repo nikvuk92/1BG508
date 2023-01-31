@@ -42,13 +42,34 @@ In the steps that will lead you towards unmasking the unknown populations you wi
 
 Before we start here are some basic Unix/Linux commands if you are not used to working in a Unix-style terminal:
 
-### Logging onto the server:
+### Logging into SNOWY & working on the server:
+ ```
+ ssh username@solander.ibg.uu.se
+ ```
+ After which you type in your password. *And yes, it'll not show up when typing it, but if you type it in correctly & press enter, you're in.*
 
-```
-ssh username@solander.ibg.uu.se
-```
-After which you type in your password. *And yes, it'll not show up when typing it, but if you type it in correctly & press enter, you're in.*
+ -->>>   Note: When acessing SNOWY from Rackham's login nodes you must always use the flag -M for all SLURM commands.
+ Examples:
 
+ ```
+ - squeue -M snowy
+ - jobinfo -M snowy
+ - sbatch -M snowy slurm_script_file
+ - scancel -u username -M snowy
+ - interactive -A projectname -M snowy -p node -n 32 -t 01:00:00
+ ```
+
+ Note: It is recommended to load all your modules in your job script file. This is even more important when running on Snowy since the module environment is not the same on the Rackham login nodes as on Snowy compute nodes.
+ You can read up more on how to use SNOWY : [Snowy_User_guide](https://www.uppmax.uu.se/support/user-guides/snowy-user-guide/)
+
+ Generally, for any bigger job (bigger Plink jobs, PCA, Admixture) **always work in interactive mode**.
+
+ ### How to run interactively on a compute node:
+ ---------->
+ Ex.:
+ ```
+    interactive -A uppmax2022-2-21 -M snowy -p node -n 32 -t 02:00:00
+ ```
 ### Moving about:
 ```
     cd – change directory
@@ -74,6 +95,12 @@ After which you type in your password. *And yes, it'll not show up when typing i
 ```
 When creating and editing a file in text editor you can use ```nano``` or ```vim``` or something else.
 
+### You can check your jobs with:
+
+ ```
+ jobinfo -u YOUR_USERNAME -M snowy
+ ```
+
 # PART 0 Knowing your way around & using Plink   	    
 
 PLINK is a software for fast and efficient filtering, merging, editing of large SNP datasets, and exports to different outputs directly usable in other programs. Stores huge datasets in compact binary format from which it reads-in data very quickly.
@@ -85,6 +112,10 @@ FYI: Link to PLINK site:[https://www.cog-genomics.org/plink2](https://www.cog-ge
 The software (Plink) is already pre-installed on the server, you just have to load it
 
 Try it:
+```
+module load plink
+```
+and then run
 ```
 plink
 ```
@@ -157,7 +188,9 @@ less unk1.fam
 ```
 As mentioned before the `.bim` file store the variant markers present in the data and `.fam` lists the samples. (you can try to look at the .bed as well, but this file is in binary format and cannot be visualized as text if you want to see the specific genotype info you must export the bed format to a ped format)
 
-Read in a  bed file dataset and convert to ped format by typing/pasting in:
+You can first load the modules ```bioinfo-tools``` & ```Plink/1.90b4.9 ```
+
+And read in a  bed file dataset and convert to ped format by typing/pasting in:
 
 ```
 plink --bfile unk1 --recode --out unk1_ped 
@@ -253,6 +286,8 @@ After you have run the script have a look at the produced output files and figur
 The input files for KING need to be in PLINK binary format, which include a binary genotype file, a family file, and a map file, e.g., ex.bed, ex.fam, and ex.bim. 
 A binary format allows efficient compression of genotype data by using two bits to represent a genotype, which offers substantial computational savings that are essential to KING analysis.
 
+First load ```bioinfo-tools``` and then ```module load KING```.
+
 Examples of reading in a dataset are:
 ```
  king -b ex.bed --related
@@ -260,6 +295,21 @@ Examples of reading in a dataset are:
 ```
 In the first example, although only ex.bed is specified, the other two input files are pre-assumed to be ex.fam and ex.bim. 
 In the case where the other two input files may have a different prefix, the second example can be used instead. 
+
+What you can do is save this short script and submit it as a job.
+/bin/bash -l
+ #
+ #
+ #SBATCH -J king
+ #SBATCH -t 12:00:00
+ #SBATCH -A uppmax2022-2-21
+ #SBATCH -n 8
+ king -b $1  --unrelated
+ ```
+ You can submit it as a job by doing:
+ ```
+ sbatch -M snowy THIS_SCRIPT.sh YOUR_DATASET5.bed
+
 
 Look at the output from KING & keep the unrelated individuals.
 
@@ -515,10 +565,15 @@ In the `.evec` file is the main output for the number of PCs that you specified 
 Prep for R:
 
 ```
+module load R/3.4.3
+```
+
+```
 sed 1d PopStrucIn1.evec | sed  "s/:/   /g " >   PopStrucIn1.evecm
 ```
 
 Open R by:
+
 ```
 R/3.4.3
 ```
@@ -628,10 +683,16 @@ A basic ADMIXTURE run looks like this:
 ```
 admixture -s time YOUR_PRUNED_DATASET.bed 2
 ```
-
 This command executes the program with a seed set from system clock time, it gives the input file (remember the extension) and the K value at which to run ADMIXTURE (2 in the previous command).
 
 For ADMIXTURE you also need to run many iterations at each K value, thus a compute cluster and some scripting is useful.
+
+First, you have to load the module:
+
+ ```
+ module load bioinfo-tools
+ module load ADMIXTURE/1.3.0
+ ```
 
 Make a script from the code below to run Admixture for K = 2-6 with 3 iterations at each K value.
 
@@ -670,6 +731,10 @@ In each one of them you will find the output ```P``` and ```Q``` for each iterat
 
 When the admixture analysis is finally done we use PONG to combine the different iterations and visualize our results. 
 
+As always, first load the module:
+ ```
+ module load pong 
+ ```
 To be able to run PONG we thus need to generate **three different files**.
 
 The first being the ***filemap***. This is the only input that is strictly required to run PONG. It consists of three columns.
@@ -817,7 +882,7 @@ hostname
 To view files interactively you need to have an X11 connection. So when you connect to the server from a new tab do:
 
 ```
-ssh -AY YOUR_USERNAME_HERE@solander.ibg.uu.se
+ssh -AY YOUR_USERNAME_HERE@rackham.uppmax.uu.se
 ```
 
 Make sure that you connect to **the same login (i.e 1,2,3 etc) as you got from hostname**.  
