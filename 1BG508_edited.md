@@ -4,21 +4,18 @@
 
 The goal of this population genomics project is to familiarize you with the workflows, different types of commonly used analyses as well as a way of thinking about how one approaches questions such as trying to explain the underlying forces that affect populations in general. We know that people tend to migrate and throughout history they have done that a lot. Similar populations get isolated and with time may become more distant, distant peoples admix with time may become more closely related - and trying to decipher human population history is usually not an easy task.
 
-Since we only have one afternoon to work with, the structure of the project work will be organized as follows: 
+A few technical details first:
 
 - each student works on the exercize on their own;
 - There is an UPPMAX project and its name is UPPMAX 2023/2-1 - you will be working here;
 - you need an username & password to log into Uppmax (you already have these by now);
-- up to you to decide if you want to work on your own laptops or in Hubben;
-- the end product should be a Scientific report of ~10 pages, including Abstract, Introduction, Materials & Methods, Results, Discussion, References, Appendices (length is not crucial here, substance is);
-- A short presentation (date will be set);
-- the deadline for the written report is the day of the presentation.
+- You will be working on the local computers at campus;
 
 ## Unmasking the mystery of the four populations
 
 The specific point of the exercise is for you to identify the populations you have been given in the **'unk1.fam'**. In order to achieve this, you have been provided a bunch of references that should come in handy as a way to compare the unknown to the known. Both reference and target populations can be found in the DATA directory:
 ```
-/proj/uppmax2022-2-21/PGA_2022/DATA/Reference_datasets/
+/proj/uppmax2022-2-21/PGA_2022/DATA/Reference_datasets/  <----------
 /proj/uppmax2022-2-21/PGA_2022/DATA/Mystery_populations
 ```
 Helpful scripts are there to aid you on your quest can be found:
@@ -32,7 +29,8 @@ In the steps that will lead you towards unmasking the unknown populations you wi
 3. Before running PCA/Admixture you need to prune your data for SNPs in LD (pruning is explained in the admixture manual https://dalexander.github.io/admixture/admixture-manual.pdf);
 4. Plot a PCA
 5. Plot the Admixture results
-6. Read up on some literature - it will help for writing the report! 
+6. Try to explain what you see
+7. Read up on some literature
 [Schlebusch 2012](https://pubmed.ncbi.nlm.nih.gov/22997136/)
 [Gurdasani_2015](https://www.nature.com/articles/nature13997) 
 [Patin 2017](https://science.sciencemag.org/content/356/6337/543)
@@ -44,35 +42,13 @@ In the steps that will lead you towards unmasking the unknown populations you wi
 
 Before we start here are some basic Unix/Linux commands if you are not used to working in a Unix-style terminal:
 
-### Logging into SNOWY & working on the server:
+### Logging onto the server:
 
 ```
 ssh username@solander.ibg.uu.se
 ```
 After which you type in your password. *And yes, it'll not show up when typing it, but if you type it in correctly & press enter, you're in.*
 
--->>>   Note: When acessing SNOWY from Rackham's login nodes you must always use the flag -M for all SLURM commands.
-Examples:
-
-```
-- squeue -M snowy
-- jobinfo -M snowy
-- sbatch -M snowy slurm_script_file
-- scancel -u username -M snowy
-- interactive -A projectname -M snowy -p node -n 32 -t 01:00:00
-```
-
-Note: It is recommended to load all your modules in your job script file. This is even more important when running on Snowy since the module environment is not the same on the Rackham login nodes as on Snowy compute nodes.
-You can read up more on how to use SNOWY : [Snowy_User_guide](https://www.uppmax.uu.se/support/user-guides/snowy-user-guide/)
-
-Generally, for any bigger job (bigger Plink jobs, PCA, Admixture) **always work in interactive mode**.
-
-### How to run interactively on a compute node:
----------->
-Ex.:
-```
-   interactive -A uppmax2022-2-21 -M snowy -p node -n 32 -t 02:00:00
-```
 ### Moving about:
 ```
     cd – change directory
@@ -96,30 +72,17 @@ Ex.:
     head
     realpath - checking the path to a file 
 ```
-### You can check your jobs with:
-
-```
-jobinfo -u YOUR_USERNAME -M snowy
-```
 When creating and editing a file in text editor you can use ```nano``` or ```vim``` or something else.
 
 # PART 0 Knowing your way around & using Plink   	    
 
-**Beware** - it is vital to not apply any filters to your unknown samples - we don't know anything about them at this point! 
-
+PLINK is a software for fast and efficient filtering, merging, editing of large SNP datasets, and exports to different outputs directly usable in other programs. Stores huge datasets in compact binary format from which it reads-in data very quickly.
 FYI: Link to PLINK site:[https://www.cog-genomics.org/plink2](https://www.cog-genomics.org/plink2)
 
-PLINK is a software for fast and efficient filtering, merging, editing of large SNP datasets, and exports to different outputs directly usable in other programs. Stores huge datasets in compact binary format from which it reads-in data very quickly.
 
 ### Running the program:
 
-If working on Rackham type in the following:
-```
-module load bioinfo-tools
-module load plink/1.90b4.9 
-
-```
-The software is already pre-installed on Rackham, you just have to load it
+The software (Plink) is already pre-installed on the server, you just have to load it
 
 Try it:
 ```
@@ -159,8 +122,9 @@ mkdir directory_name (create a new directory)
 If you don't already have a working directory for this course then create one now:
 
 ```
-cd /proj/uppmax2022-2-21 #Uppmax project for this course <<<<<<<<<<<<
-mkdir your_unique_team_name
+cd /proj/uppmax2023-2-1/MYSTERY_QUEST/ #Uppmax project for this course <<<<<<<<<<<<
+
+mkdir your_unique_name
 ```
 
 ### The course material can be found at the following path:
@@ -178,12 +142,13 @@ cp /full_path_to_course_material/unk1.bim .
 cp /full_path_to_course_material/unk1.fam .
 ```
 **The files above contain SNPs from 4 unknown population groups in bed file format. You are going to figure out the ancestry of these population groups during this practical.**
+
 To speed things up for you we are only working with chromosomes 20-22.
  
 Look at the `.bim` (markers) and `.fam` (sample info) files by typing:
 
 ```
-less umk1.bim
+less unk1.bim
 ``` 
 do the same for the `.fam` file
 
@@ -280,29 +245,22 @@ Look at file hardy_unk5.hwe, see if you understand the output?
 
 There are additional filtering steps that you can go further. PLINK site on the side lists all the cool commands that you can use to treat your data. Usually, we also filter for related individuals and do a sex-check on the X-chromosome to check for sample mix-ups. 
 
-## Step 5 Filtering out related individuals (OPTIONAL - See if you have the time)
+## Step 5 Filtering out related individuals (OPTIONAL - we can skip this for now)
 
 In the `SCRIPTS` folder, there is a script called `sbatch_KING.sh` that can be used to run [KING](http://people.virginia.edu/~wc9c/KING/manual.html) You can have a look inside for instructions on how to run the script. Check out the manual and try and figure out how the software works.
 After you have run the script have a look at the produced output files and figure out how to remove the related individuals. (*Hint - keep via Plink might be a good option) 
-*P.S. You don't need to do run KING for the Unknown dataset.*
 
-First load ```bioinfo-tools``` and then ```module load KING```.
-The script for KING is as follows:
+The input files for KING need to be in PLINK binary format, which include a binary genotype file, a family file, and a map file, e.g., ex.bed, ex.fam, and ex.bim. 
+A binary format allows efficient compression of genotype data by using two bits to represent a genotype, which offers substantial computational savings that are essential to KING analysis.
 
+Examples of reading in a dataset are:
 ```
-#!/bin/bash -l
-#
-#
-#SBATCH -J king
-#SBATCH -t 12:00:00
-#SBATCH -A uppmax2022-2-21
-#SBATCH -n 8
-king -b $1  --unrelated
+ king -b ex.bed --related
+ king -b ex.bed --fam ex.fam --bim ex.bim --related
 ```
-You can submit it as a job by doing:
-```
-sbatch -M snowy THIS_SCRIPT.sh YOUR_DATASET5.bed
-```
+In the first example, although only ex.bed is specified, the other two input files are pre-assumed to be ex.fam and ex.bim. 
+In the case where the other two input files may have a different prefix, the second example can be used instead. 
+
 Look at the output from KING & keep the unrelated individuals.
 
 ## Step 6 OPTIONAL - If you have time plot the heterozygosities per population in R and look at the different heterozygosities in the different populations. If short on time, you can try this at home.
@@ -464,7 +422,7 @@ Try merge again:
 plink --bfile MergeRef2 --bmerge refpops3.bed refpops3.bim refpops3.fam --make-bed --out MergeRefPop2 
 ```
 
-It works now. Look at your screen output. You will see that the Refpops only contains SNPs that overlap with a small percentage of the SNPs in the UNknown Pops data (~15 000 vs ~95 000). We will now again filter for SNP missingness to exclude all of the extra SNPs in the Unknown Pop data (Retain only the overlap).
+It works now. Look at your screen output. You will see that the Refpops only contains SNPs that overlap with a small percentage of the SNPs in the Unknown Pops data (~15 000 vs ~95 000). We will now again filter for SNP missingness to exclude all of the extra SNPs in the Unknown Pop data (Retain only the overlap).
 
 ```
 plink --bfile MergeRefPop2 --geno 0.1 --make-bed --out MergeRefPop2fil 
@@ -472,7 +430,7 @@ plink --bfile MergeRefPop2 --geno 0.1 --make-bed --out MergeRefPop2fil
 
 How many SNPs are left for your analyses?
 
-The last thing to do is to extract your fake/Ref_ind from your data.
+The last thing to do is to extract your ***fake/Ref_ind*** from your data.
 
 ```
 plink --bfile MergeRefPop2fil --remove RefInd1.fam --make-bed --out MergeRefPop3  
@@ -545,8 +503,6 @@ Open the parameter file and look at what is specified in it. At the start is the
 Run the smartpca package in Eigensoft by typing
 
 ```
-module load eigensoft
-
 smartpca -p PopStrucIn1.par
 ```
 
@@ -562,12 +518,12 @@ Prep for R:
 sed 1d PopStrucIn1.evec | sed  "s/:/   /g " >   PopStrucIn1.evecm
 ```
 
-Load the R module:
+Open R by:
 ```
-module load R/3.4.3
+R/3.4.3
 ```
 See if you understand the code below. It plots PC1vsPC2 etc and puts labels on the plot.
-Open `R` and paste the following code to plot your PCs:
+After opening `R`, paste the following code to plot your PCs:
 
 ```
 WD<-getwd()
@@ -667,12 +623,6 @@ Open the main script and paste the rs name of the SNP you are interested in in t
 ADMIXTURE is a similar tool to STRUCTURE but runs much quicker, especially on large datasets.
 ADMIXTURE runs directly from .bed or .ped files and needs no extra parameters for file preparation. You do not specify burin and repeats, ADMIXTURE exits when it converged on a solution (Delta< minimum value)
 
-First, you have to load the module:
-
-```
-module load bioinfo-tools
-module load ADMIXTURE/1.3.0
-```
 A basic ADMIXTURE run looks like this:
 
 ```
@@ -706,7 +656,7 @@ exit 0") |
 done
 ```
 
-You will need to **replace the project name** and the **path** to your pruned .bed-file in the script then just run it:
+The **project name** and the **path** to the pruned .bed-file need to be replaced in the script before running it:
 
 ```
 bash NAME_OF_THE_SCRIPT.sh
@@ -822,9 +772,6 @@ This way you will get a file with two columns. You can edit the the names of the
 * Windows Users - MobaXterm https://mobaxterm.mobatek.net
 * Ubuntu Users - I'm sure you can figure it out yourselves
 
-```
-module load pong 
-```
 **Super important:**
 Since we are several people who are going to run PONG at the same time we need to use a different port, otherwise, we will collide with each other. The default port for PONG is 4000. Any other free port will work, like 4001, 2, etc. Make sure you are using a **unique port** before proceeding. If multiple people are trying to run PONG on the same port you have problems, so talk to your classmates and find a unique port in the 4000s that people aren't using.
 
@@ -867,13 +814,13 @@ The web server is hosted on the **same login node as you were running pong**. In
 hostname
 ```
 
-To view files interactively you need to have an X11 connection. So when you connect to rackham from a new tab do:
+To view files interactively you need to have an X11 connection. So when you connect to the server from a new tab do:
 
 ```
-ssh -AY YOUR_USERNAME_HERE@rackham.uppmax.uu.se
+ssh -AY YOUR_USERNAME_HERE@solander.ibg.uu.se
 ```
 
-Make sure that you connect to **the same Rackham (i.e 1,2,3 etc) as you got from hostname**.  
+Make sure that you connect to **the same login (i.e 1,2,3 etc) as you got from hostname**.  
 In a **new tab** (if you didn't put PONG in the background) type:
 
 ```
@@ -891,5 +838,6 @@ Do the results of your PCA correspond to the population structure results you go
 
 # Part 3: Review & reflect
 
-Okay, hopefully this project wasn't too difficult or too boring or too fast. Maybe it was even fun? And aside from that maybe you even learnt something. Regardless of how you felt about it, this project was constructed to provide you with a **real life** scenario (in the condensed time we have) of what most exploratory analysis our field of study look like, warts & all. More times than not you are working with something you don't know enough about (duh! - that's why it's called research) using techniques you're trying for the first time and failing on many attempts. Most of the manuals & how-toos you need to look for yourself, and references come in the shape of many scattered papers on the subject. >>>>>>>>>>>>>>>>>>>>And as you would do when you want to publish your findings in real life, the final step of the project is to write a 10-15 page report on your findings. Make sure to read up on the papers recommended above. They should provide you with enough of a backstory & will surely help you a lot in constructing the grand picture of things. You are free to also look into similar papers on the subject. Good luck & happy writing!
+Okay, hopefully this project wasn't too difficult or too boring or too fast. Maybe it was even fun? 
+The point of today's exercize was to get a broad understanding of what a population structure analysis looks like (at least in humans!) and get a visual representation of some results. Of course, there is plenty more to do, many analyses to run and lots more data to be scrutinized but hopefully by going over some of the things today it got your imagination tingling! If you want to know more, you can read up on the papers recommended above. Although the population history of the continent we just worked on is very very complex, they should provide you with enough of a backstory to be able to grasp the grand picture of things. You are free to also look into similar papers on the subject. Until next time!
  
